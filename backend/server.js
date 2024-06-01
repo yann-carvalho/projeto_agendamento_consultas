@@ -9,7 +9,7 @@ const session = require('express-session');
 const pool = new Pool({
     user: 'postgres',
     host: 'localhost',
-    database: 'db_extensao_2',
+    database: 'db_agendamento_consultas',
     password: 'postgres',
     port: 5432,
 });
@@ -41,9 +41,9 @@ app.post('/register', async (req, res) => {
             'INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id', 
             [name, email, hashedPassword, role]
         );
-        res.status(201).json({ message: 'User registered successfully', userId: result.rows[0].id });
+        res.redirect('/register.html?registrationSuccess=true');
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.redirect('/register.html?internalServerError=true');
     }
 });
 
@@ -83,9 +83,9 @@ app.post('/appointments', async (req, res) => {
             'INSERT INTO appointments (user_id, service_type, appointment_date, status) VALUES ($1, $2, $3, $4) RETURNING id',
             [req.session.userId, serviceType, appointmentDate, 'Scheduled']
         );
-        res.status(201).json({ message: 'Appointment created successfully', appointmentId: result.rows[0].id });
+        res.redirect('/appointment.html?success=true');
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.redirect('/appointment.html?internalServerError=true');
     }
 });
 

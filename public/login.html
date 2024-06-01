@@ -3,54 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <title>Login</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
+    <link rel="shortcut icon" href="/favicon.ico">
     <div class="container mt-5">
         <h2>Login</h2>
         <form id="loginForm" action="/login" method="POST">
             <div class="form-group">
                 <label for="email">Email</label>
-                <input type="email" id="email" name="email" class="form-control" placeholder="Email" required>
+                <input type="email" class="form-control" id="email" name="email" placeholder="Email" required>
             </div>
             <div class="form-group">
                 <label for="password">Senha</label>
-                <input type="password" id="password" name="password" class="form-control" placeholder="Senha" required>
+                <input type="password" class="form-control" id="password" name="password" placeholder="Senha" required>
             </div>
             <button type="submit" class="btn btn-primary">Login</button>
         </form>
-        <a href="register.html" class="mt-3">Não tem uma conta? Registrar</a>
+        <a href="register.html" class="mt-3 d-block">Não tem uma conta? Registrar</a>
     </div>
 
-    <!-- Modal de Mensagem -->
-    <div class="modal fade" id="messageModal" tabindex="-1" role="dialog" aria-labelledby="messageModalLabel" aria-hidden="true">
+    <!-- Modal -->
+    <div class="modal fade" id="invalidCredentialsModal" tabindex="-1" role="dialog" aria-labelledby="invalidCredentialsModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="messageModalLabel">Mensagem</h5>
+                    <h5 class="modal-title" id="invalidCredentialsModalLabel">Erro</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body" id="messageBody">
-                    <!-- Mensagem dinâmica aqui -->
+                <div class="modal-body">
+                    Credenciais inválidas. Por favor, tente novamente.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const urlParams = new URLSearchParams(window.location.search);
             const invalidCredentials = urlParams.get('invalidCredentials');
             if (invalidCredentials === 'true') {
-                $('#messageBody').text('Credenciais inválidas. Por favor, tente novamente.');
-                $('#messageModal').modal('show');
+                $('#invalidCredentialsModal').modal('show');
             }
         });
     </script>
