@@ -61,12 +61,10 @@ label {
     font-weight: bold;
 }
 
-/* Mensagem de erro */
 .error-message {
     color: red;
 }
 
-/* Mensagem de sucesso */
 .success-message {
     color: green;
 }
