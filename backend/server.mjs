@@ -26,9 +26,12 @@ app.use(session({
 // Serve index.html on the root route
 app.use(express.static(path.join(__dirname, '../public')));
 
-// app.get('/', (req, res) => {
-//     res.sendFile(path.join(__dirname, '../public', 'index.html'));
-// });
+const ensureLoggedIn = (req, res, next) => {
+    if (!req.session.userId) {
+        return res.redirect('/login.html');
+    }
+    next();
+};
 
 // User registration
 app.post('/register', async (req, res) => {
@@ -88,16 +91,13 @@ app.post('/login', async (req, res) => {
 });
 
 // Create appointment
-app.post('/appointments', async (req, res) => {
-    if (!req.session.userId) {
-        return res.status(401).json({ error: 'Unauthorized' });
-    }
+app.post('/appointments', ensureLoggedIn, async (req, res) => {
     const { serviceType, appointmentDate } = req.body;
     try {
         const { data, error } = await supabase
             .from('appointments')
             .insert([{ user_id: req.session.userId, service_type: serviceType, appointment_date: appointmentDate, status: 'Scheduled' }]);
-        
+
         if (error) {
             throw error;
         }
@@ -109,10 +109,7 @@ app.post('/appointments', async (req, res) => {
 });
 
 // Cancel appointment
-app.delete('/appointments/:id', async (req, res) => {
-    if (!req.session.userId) {
-        return res.status(401).json({ error: 'Unauthorized' });
-    }
+app.delete('/appointments/:id', ensureLoggedIn, async (req, res) => {
     const { id } = req.params;
     try {
         const { data, error } = await supabase
