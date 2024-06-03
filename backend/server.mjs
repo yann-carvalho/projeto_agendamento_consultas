@@ -18,15 +18,17 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 app.use(session({
-    secret: process.env.SESSION_SECRET, // Certifique-se de definir uma variável de ambiente SESSION_SECRET
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
 }));
 
 // Serve index.html on the root route
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../public', 'index.html'));
-});
+app.use(express.static(path.join(__dirname, '../public')));
+
+// app.get('/', (req, res) => {
+//     res.sendFile(path.join(__dirname, '../public', 'index.html'));
+// });
 
 // User registration
 app.post('/register', async (req, res) => {
