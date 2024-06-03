@@ -1,25 +1,24 @@
-const express = require('express');
-const path = require('path');
-const bodyParser = require('body-parser');
-const { Pool } = require('pg');
-const bcrypt = require('bcrypt');
-const session = require('express-session');
-require('dotenv').config();  // Para carregar as variáveis de ambiente
+import express from 'express';
+import path from 'path';
+import bodyParser from 'body-parser';
+import { createClient } from '@supabase/supabase-js';
+import bcrypt from 'bcrypt';
+import session from 'express-session';
+import dotenv from 'dotenv';
+
+dotenv.config({ path: '/home/yannsoares/UNIESP/projeto_agendamento_consultas/backend/file.env' });
 
 const app = express();
 
-const pool = new Pool({
-    connectionString: process.env.SUPABASE_URL,
-    ssl: {
-        rejectUnauthorized: false
-    }
-});
+const supabaseUrl = 'https://atevcpkhcqionsxeucsp.supabase.co';
+const supabaseKey = process.env.SUPABASE_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, '../public')));
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
 app.use(session({
-    secret: process.env.SESSION_SECRET,  // Certifique-se de definir uma variável de ambiente SESSION_SECRET
+    secret: process.env.SESSION_SECRET, // Certifique-se de definir uma variável de ambiente SESSION_SECRET
     resave: false,
     saveUninitialized: true,
 }));
@@ -38,12 +37,16 @@ app.post('/register', async (req, res) => {
     }
     const hashedPassword = await bcrypt.hash(password, 10);
     try {
-        const result = await pool.query(
-            'INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id', 
-            [name, email, hashedPassword, role]
-        );
+        const { data, error } = await supabase
+            .from('users')
+            .insert([{ name, email, password: hashedPassword, role }]);
+        
+        if (error) {
+            throw error;
+        }
+
         res.redirect('/register.html?registrationSuccess=true');
-    } catch (err) {
+    } catch (error) {
         res.redirect('/register.html?internalServerError=true');
     }
 });
@@ -52,9 +55,18 @@ app.post('/register', async (req, res) => {
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
     try {
-        const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-        if (result.rows.length > 0) {
-            const user = result.rows[0];
+        const { data: users, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('email', email)
+            .limit(1);
+
+        if (error) {
+            throw error;
+        }
+
+        if (users.length > 0) {
+            const user = users[0];
             if (await bcrypt.compare(password, user.password)) {
                 req.session.userId = user.id;
                 // Redireciona para dashboard.html se o login for bem-sucedido
@@ -67,7 +79,7 @@ app.post('/login', async (req, res) => {
             // Redireciona para login.html com a mensagem de credenciais inválidas
             res.redirect('/login.html?invalidCredentials=true');
         }
-    } catch (err) {
+    } catch (error) {
         // Redireciona para login.html com a mensagem de erro interno do servidor
         res.redirect('/login.html?internalServerError=true');
     }
@@ -80,12 +92,16 @@ app.post('/appointments', async (req, res) => {
     }
     const { serviceType, appointmentDate } = req.body;
     try {
-        const result = await pool.query(
-            'INSERT INTO appointments (user_id, service_type, appointment_date, status) VALUES ($1, $2, $3, $4) RETURNING id',
-            [req.session.userId, serviceType, appointmentDate, 'Scheduled']
-        );
+        const { data, error } = await supabase
+            .from('appointments')
+            .insert([{ user_id: req.session.userId, service_type: serviceType, appointment_date: appointmentDate, status: 'Scheduled' }]);
+        
+        if (error) {
+            throw error;
+        }
+
         res.redirect('/appointment.html?success=true');
-    } catch (err) {
+    } catch (error) {
         res.redirect('/appointment.html?internalServerError=true');
     }
 });
@@ -97,20 +113,26 @@ app.delete('/appointments/:id', async (req, res) => {
     }
     const { id } = req.params;
     try {
-        const result = await pool.query(
-            'DELETE FROM appointments WHERE id = $1 AND user_id = $2 RETURNING id',
-            [id, req.session.userId]
-        );
-        if (result.rows.length > 0) {
+        const { data, error } = await supabase
+            .from('appointments')
+            .delete()
+            .eq('id', id)
+            .eq('user_id', req.session.userId);
+
+        if (error) {
+            throw error;
+        }
+
+        if (data.length > 0) {
             res.json({ message: 'Appointment cancelled' });
         } else {
             res.status(404).json({ error: 'Appointment not found' });
         }
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 });
 
-// app.listen(3000, () => {
-//     console.log('Server running on port 3000');
-// });
+app.listen(3000, () => {
+    console.log('Server running on port 3000');
+});
