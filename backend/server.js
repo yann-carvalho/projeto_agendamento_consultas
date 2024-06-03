@@ -1,24 +1,25 @@
 const express = require('express');
 const path = require('path');
-const app = express();
 const bodyParser = require('body-parser');
 const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 const session = require('express-session');
+require('dotenv').config();  // Para carregar as variáveis de ambiente
+
+const app = express();
 
 const pool = new Pool({
-    user: 'postgres',
-    host: 'localhost',
-    database: 'db_agendamento_consultas',
-    password: 'postgres',
-    port: 5432,
+    connectionString: process.env.SUPABASE_URL,
+    ssl: {
+        rejectUnauthorized: false
+    }
 });
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
 app.use(session({
-    secret: 'your_secret_key',
+    secret: process.env.SESSION_SECRET,  // Certifique-se de definir uma variável de ambiente SESSION_SECRET
     resave: false,
     saveUninitialized: true,
 }));
@@ -110,6 +111,6 @@ app.delete('/appointments/:id', async (req, res) => {
     }
 });
 
-app.listen(3000, () => {
-    console.log('Server running on port 3000');
-});
+// app.listen(3000, () => {
+//     console.log('Server running on port 3000');
+// });
